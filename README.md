@@ -3,10 +3,10 @@
 A Expense Recorder App. Add, Update and Track your Daily Expenses.
 
 ## Screenshots
-<image src="Screenshots/signup.jpg">
-<image src="Screenshots/login.jpg">
-<image src="Screenshots/home.jpg">
-<image src="Screenshots/add.jpg">
-<image src="Screenshots/edit.jpg">
-<image src="Screenshots/appdrawer.jpg">
-<image src="Screenshots/search.jpg">
+<img align="left" src="Screenshots/signup.jpg" width="250">
+<image align="left" src="Screenshots/login.jpg" width="250">
+<image align="left" src="Screenshots/home.jpg" width="250">
+<image align="left" src="Screenshots/add.jpg" width="250">
+<image align="left" src="Screenshots/edit.jpg" width="250">
+<image align="left" src="Screenshots/appdrawer.jpg" width="250">
+<image align="left" src="Screenshots/search.jpg" width="250">
