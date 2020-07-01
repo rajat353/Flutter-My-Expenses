@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter/services.dart';
 import 'package:scoped_model/scoped_model.dart';
-
 import '../scoped-models/main.dart';
 import '../models/auth.dart';
 
@@ -26,8 +25,44 @@ class _AuthPageState extends State<AuthPage> {
       fit: BoxFit.cover,
       colorFilter:
           ColorFilter.mode(Colors.black.withOpacity(0.6), BlendMode.dstATop),
-      image: AssetImage('assets/background.jpg'),
+      image: AssetImage('assets/background.png'),
     );
+  }
+
+  Future<bool> onWillPop() {
+    return showDialog(
+          context: context,
+          builder: (context) => new AlertDialog(
+            backgroundColor: Colors.white,
+            shape: Border.all(color: Colors.teal),
+            title: new Text('Are you sure?',
+                style: TextStyle(color: Colors.black)),
+            content: new Text('Do you want to exit?',
+                style: TextStyle(color: Colors.black)),
+            actions: <Widget>[
+              new FlatButton(
+                splashColor: Colors.teal,
+                shape: Border.all(color: Colors.teal),
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(
+                  "NO",
+                  style: TextStyle(color: Colors.black),
+                ),
+              ),
+              SizedBox(height: 30),
+              new FlatButton(
+                splashColor: Colors.white,
+                shape: Border.all(color: Colors.teal),
+                onPressed: () => SystemNavigator.pop(),
+                child: Text(
+                  "YES",
+                  style: TextStyle(color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   Widget _buildEmailTextField() {
@@ -112,78 +147,86 @@ class _AuthPageState extends State<AuthPage> {
   Widget build(BuildContext context) {
     final double deviceWidth = MediaQuery.of(context).size.width;
     final double targetWidth = deviceWidth > 550.0 ? 500.0 : deviceWidth * 0.95;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_authMode == AuthMode.Login ? 'LOGIN' : 'SIGNUP'),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          image: _buildBackgroundImage(),
-        ),
-        padding: EdgeInsets.all(10.0),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Container(
-              width: targetWidth,
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: <Widget>[
-                    _buildEmailTextField(),
-                    SizedBox(
-                      height: 10.0,
+    return GestureDetector(
+        onTap: () {
+          FocusScope.of(context).requestFocus(FocusNode());
+        },
+        child: WillPopScope(
+            onWillPop: onWillPop,
+            child: Scaffold(
+              appBar: AppBar(
+                centerTitle: true,
+                title: Text(_authMode == AuthMode.Login ? 'LOGIN' : 'SIGNUP'),
+              ),
+              body: Container(
+                decoration: BoxDecoration(
+                  image: _buildBackgroundImage(),
+                ),
+                padding: EdgeInsets.all(10.0),
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: Container(
+                      width: targetWidth,
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: <Widget>[
+                            _buildEmailTextField(),
+                            SizedBox(
+                              height: 10.0,
+                            ),
+                            _buildPasswordTextField(),
+                            SizedBox(
+                              height: 10.0,
+                            ),
+                            _authMode == AuthMode.Signup
+                                ? _buildPasswordConfirmTextField()
+                                : Container(),
+                            SizedBox(
+                              height: 10.0,
+                            ),
+                            ScopedModelDescendant<MainModel>(
+                              builder: (BuildContext context, Widget child,
+                                  MainModel model) {
+                                return model.isLoading
+                                    ? CircularProgressIndicator()
+                                    : RaisedButton(
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10)),
+                                        textColor: Colors.white,
+                                        child: Text(_authMode == AuthMode.Login
+                                            ? 'LOGIN'
+                                            : 'SIGNUP'),
+                                        onPressed: () =>
+                                            _submitForm(model.authenticate),
+                                      );
+                              },
+                            ),
+                            SizedBox(
+                              height: 10.0,
+                            ),
+                            RaisedButton(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                              textColor: Colors.white,
+                              child: Text(
+                                  'Switch to ${_authMode == AuthMode.Login ? 'Signup' : 'Login'}'),
+                              onPressed: () {
+                                setState(() {
+                                  _authMode = _authMode == AuthMode.Login
+                                      ? AuthMode.Signup
+                                      : AuthMode.Login;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    _buildPasswordTextField(),
-                    SizedBox(
-                      height: 10.0,
-                    ),
-                    _authMode == AuthMode.Signup
-                        ? _buildPasswordConfirmTextField()
-                        : Container(),
-                    SizedBox(
-                      height: 10.0,
-                    ),
-                    ScopedModelDescendant<MainModel>(
-                      builder: (BuildContext context, Widget child,
-                          MainModel model) {
-                        return model.isLoading
-                            ? CircularProgressIndicator()
-                            : RaisedButton(
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10)),
-                                textColor: Colors.white,
-                                child: Text(_authMode == AuthMode.Login
-                                    ? 'LOGIN'
-                                    : 'SIGNUP'),
-                                onPressed: () =>
-                                    _submitForm(model.authenticate),
-                              );
-                      },
-                    ),
-                    SizedBox(
-                      height: 10.0,
-                    ),
-                    RaisedButton(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                      textColor: Colors.white,
-                      child: Text(
-                          'Switch to ${_authMode == AuthMode.Login ? 'Signup' : 'Login'}'),
-                      onPressed: () {
-                        setState(() {
-                          _authMode = _authMode == AuthMode.Login
-                              ? AuthMode.Signup
-                              : AuthMode.Login;
-                        });
-                      },
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
+            )));
   }
 }

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'package:scoped_model/scoped_model.dart';
-
 import '../widgets/helpers/ensure_visible.dart';
 import '../models/expense.dart';
-import '../widgets/ui_elements/image.dart';
 import '../scoped-models/main.dart';
 
 class ExpenseEditPage extends StatefulWidget {
@@ -19,11 +16,21 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
     'title': null,
     'description': null,
     'amount': null,
-    'image': 'assets/rupee.jpg',
-    "createdAt": DateTime.now()
+    //'image': 'assets/rupee.jpg',
   };
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   DateTime _date;
+  final List<String> _category = [
+    'No Category',
+    'Food',
+    'Bills',
+    'Entertainment',
+    'Shopping',
+    'Health',
+    'Education',
+    'Travel',
+  ];
+  String _catValue;
   final _titleFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
   final _amountFocusNode = FocusNode();
@@ -31,9 +38,10 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
   final _descriptionTextController = TextEditingController();
 
   String formatDate(DateTime date) {
-    List<String> _date = date.toIso8601String().substring(0, 10).split("-");
+    List<String> dateFormat =
+        date.toIso8601String().substring(0, 10).split("-");
 
-    return "${_date[2]}-${_date[1]}-${_date[0]}";
+    return "${dateFormat[2]}-${dateFormat[1]}-${dateFormat[0]}";
   }
 
   Widget _buildTitleTextField(Expense expense) {
@@ -41,22 +49,17 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
       _titleTextController.text = '';
     } else if (expense != null && _titleTextController.text.trim() == '') {
       _titleTextController.text = expense.title;
-    } else if (expense != null && _titleTextController.text.trim() != '') {
-      _titleTextController.text = _titleTextController.text;
-    } else if (expense == null && _titleTextController.text.trim() != '') {
-      _titleTextController.text = _titleTextController.text;
-    } else {
-      _titleTextController.text = '';
     }
     return EnsureVisibleWhenFocused(
       focusNode: _titleFocusNode,
       child: TextFormField(
         controller: _titleTextController,
+        maxLength: 30,
         focusNode: _titleFocusNode,
         decoration: InputDecoration(labelText: 'Expense Title'),
         validator: (String value) {
           if (value.isEmpty) {
-            return 'Title is required';
+            return 'Title is required.';
           }
         },
         onSaved: (String value) {
@@ -78,7 +81,7 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
       child: TextFormField(
         controller: _descriptionTextController,
         focusNode: _descriptionFocusNode,
-        maxLines: 4,
+        maxLines: 3,
         decoration: InputDecoration(labelText: 'Expense Description'),
         onSaved: (String value) {
           _formData['description'] = value;
@@ -96,8 +99,8 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
         decoration: InputDecoration(labelText: 'Expense amount'),
         initialValue: expense == null ? '' : expense.amount.toString(),
         validator: (String value) {
-          if (value.isEmpty ||
-              !RegExp(r'^(?:[1-9]\d*|0)?(?:\.\d+)?$').hasMatch(value)) {
+          if (value.isEmpty || double.parse(value)<=0 ||
+              !RegExp(r'^(?:[0-9]\d*|0)?(?:\.\d+)?$').hasMatch(value)) {
             return 'amount is required and should be a number.';
           }
         },
@@ -108,20 +111,68 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
     );
   }
 
+  String setCategory(String value) {
+    _catValue = value;
+    return _catValue;
+  }
+
+  Widget _buildCategoryField(Expense expense) {
+    return Container(
+      alignment: Alignment.center,
+        decoration: ShapeDecoration(
+            shape: RoundedRectangleBorder(
+          side: BorderSide(
+              width: 2.0, style: BorderStyle.solid, color: Colors.teal),
+          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+        )),
+        child: DropdownButton(
+          style: TextStyle(color: Colors.teal),
+          onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+          focusColor: Colors.blue,
+          iconEnabledColor: Colors.teal,
+          autofocus: true,
+          elevation: 50,
+          value: _catValue == null
+              ? (expense == null
+                  ? setCategory('No Category')
+                  : setCategory(expense.category))
+              : _catValue,
+          onChanged: (newValue) {
+            setState(() {
+              _catValue = newValue;
+            });
+          },
+          items: _category.map((category) {
+            return DropdownMenuItem(child: Text(category), value: category);
+          }).toList(),
+        ));
+  }
+
+  String setDate(DateTime date) {
+    _date = date;
+    List<String> dateFormat =
+        date.toIso8601String().substring(0, 10).split("-");
+
+    return "${dateFormat[2]}-${dateFormat[1]}-${dateFormat[0]}";
+  }
+
   Widget _buildDateOption(Expense expense) {
-    return Card(
-      elevation: 2.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(30.0),
-      ),
+    return Container(
+      decoration: ShapeDecoration(
+          shape: RoundedRectangleBorder(
+        side: BorderSide(
+            width: 2.0, style: BorderStyle.solid, color: Colors.teal),
+        borderRadius: BorderRadius.all(Radius.circular(5.0)),
+      )),
       child: MaterialButton(
         minWidth: 100,
         child: _date == null
             ? Text(expense == null
-                ? 'Date: ' + formatDate(DateTime.now())
-                : 'Date: ' + formatDate(expense.createdAt))
+                ? 'Date: ' + setDate(DateTime.now())
+                : 'Date: ' + setDate(expense.createdAt))
             : Text('Date: ' + formatDate(_date)),
         onPressed: () async {
+          FocusScope.of(context).requestFocus(FocusNode());
           await showDatePicker(
             context: context,
             firstDate: DateTime(2000),
@@ -133,8 +184,6 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
             if (date != null) {
               setState(() {
                 _date = date;
-
-                _formData["createdAt"] = date;
               });
             }
           });
@@ -151,47 +200,12 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
             : RaisedButton(
                 child: Text('Save'),
                 textColor: Colors.white,
-                onPressed: () => _submitForm(
-                    model.addExpense,
-                    model.updateExpense,
-                    model.selectExpense,
-                    model.selectedExpenseIndex),
-              );
+                onPressed: () {
+                  FocusScope.of(context).requestFocus(FocusNode());
+                  _submitForm(model.addExpense, model.updateExpense,
+                      model.selectExpense, model.selectedExpenseIndex);
+                });
       },
-    );
-  }
-
-  Widget _buildPageContent(BuildContext context, Expense expense) {
-    final double deviceWidth = MediaQuery.of(context).size.width;
-    final double targetWidth = deviceWidth > 550.0 ? 500.0 : deviceWidth * 0.95;
-    final double targetPadding = deviceWidth - targetWidth;
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).requestFocus(FocusNode());
-      },
-      child: Container(
-        margin: EdgeInsets.all(10.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: EdgeInsets.symmetric(horizontal: targetPadding / 2),
-            children: <Widget>[
-              _buildTitleTextField(expense),
-              _buildDescriptionTextField(expense),
-              _buildamountTextField(expense),
-              SizedBox(
-                height: 10.0,
-              ),
-              _buildDateOption(expense),
-              ImageInput(),
-              SizedBox(
-                height: 10.0,
-              ),
-              _buildSubmitButton(),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -204,12 +218,13 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
     _formKey.currentState.save();
     if (selectedExpenseIndex == -1) {
       addExpense(
-        _titleTextController.text,
-        _descriptionTextController.text,
-        _formData['image'],
-        _formData['amount'],
-        _formData['createdAt'],
-      ).then((bool success) {
+              _titleTextController.text.trim(),
+              _descriptionTextController.text.trim(),
+              //_formData['image'],
+              _formData['amount'],
+              _date,
+              _catValue)
+          .then((bool success) {
         if (success) {
           Navigator.pushReplacementNamed(context, '/expenses')
               .then((_) => setSelectedExpense(null));
@@ -232,14 +247,53 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
       });
     } else {
       updateExpense(
-        _titleTextController.text,
-        _descriptionTextController.text,
-        _formData['image'],
-        _formData['amount'],
-        _formData['createdAt'],
-      ).then((_) => Navigator.pushReplacementNamed(context, '/expenses')
-          .then((_) => setSelectedExpense(null)));
+              _titleTextController.text,
+              _descriptionTextController.text,
+              //_formData['image'],
+              _formData['amount'],
+              _date,
+              _catValue)
+          .then((_) => Navigator.pushReplacementNamed(context, '/expenses')
+              .then((_) => setSelectedExpense(null)));
     }
+  }
+
+  Widget _buildPageContent(BuildContext context, Expense expense) {
+    final double deviceWidth = MediaQuery.of(context).size.width;
+    final double targetWidth = deviceWidth > 550.0 ? 500.0 : deviceWidth * 0.95;
+    final double targetPadding = deviceWidth - targetWidth;
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).requestFocus(FocusNode());
+      },
+      child: Container(
+        margin: EdgeInsets.all(10.0),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: EdgeInsets.symmetric(horizontal: targetPadding / 2),
+            children: <Widget>[
+              _buildTitleTextField(expense),
+              _buildDescriptionTextField(expense),
+              _buildamountTextField(expense),
+              SizedBox(
+                height: 20.0,
+              ),
+              _buildCategoryField(expense),
+              SizedBox(
+                height: 10.0,
+              ),
+              _buildDateOption(expense),
+              //ImageInput(),
+              SizedBox(
+                height: 10.0,
+              ),
+              _buildSubmitButton(),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override

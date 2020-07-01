@@ -4,7 +4,6 @@ import 'package:scoped_model/scoped_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rxdart/subjects.dart';
-
 import '../models/expense.dart';
 import '../models/user.dart';
 import '../models/auth.dart';
@@ -12,7 +11,7 @@ import '../models/auth.dart';
 mixin ConnectedExpensesModel on Model {
   List<Expense> _expenses = [];
   double totalExpense = 0;
-
+  double today = 0;
   String _selExpenseId;
   String _sortBy = "Date";
   String _searchQuery = "";
@@ -103,26 +102,55 @@ mixin ExpensesModel on ConnectedExpensesModel {
     });
   }
 
+  double categoryExpenses(value) {
+    double sum = 0;
+    for (int i = 0; i < allExpenses.length; i++) {
+      if (allExpenses[i].category == value) sum = sum + allExpenses[i].amount;
+    }
+    return sum;
+  }
+
+  Map<String, double> categoryMap() {
+    Map<String, double> dataMap = {
+      'No Category': categoryExpenses('No Category'),
+      'Food': categoryExpenses('Food'),
+      'Bills': categoryExpenses('Bills'),
+      'Entertainment': categoryExpenses('Entertainment'),
+      'Shopping': categoryExpenses('Shopping'),
+      'Health': categoryExpenses('Health'),
+      'Education': categoryExpenses('Education'),
+      'Travel': categoryExpenses('Travel')
+    };
+    return dataMap;
+  }
+
+  void todayExpense(_expenses) {
+    today = 0;
+    for (var i = 0; i < _expenses.length; i++)
+      if (formatDate(_expenses[i].createdAt) == formatDate(DateTime.now()))
+        today = today + _expenses[i].amount;
+  }
+
   void totalExpenses(_expenses) {
     totalExpense = 0;
     for (var i = 0; i < _expenses.length; i++)
       totalExpense = totalExpense + _expenses[i].amount;
   }
 
-  Future<bool> addExpense(String title, String description, String image,
-      double amount, DateTime createdAt) async {
+  Future<bool> addExpense(String title, String description, double amount,
+      DateTime createdAt, String category) async {
     _isLoading = true;
     notifyListeners();
     final Map<String, dynamic> expenseData = {
       'title': title,
       'description': description,
-      'image':
-          'https://img.etimg.com/thumb/width-640,height-480,imgsize-186055,resizemode-1,msid-66135358/rupee-tanks-32-paise-to-hit-fresh-lifetime-low-of-74-39.jpg',
+      // 'image':
+      //     'https://img.etimg.com/thumb/width-640,height-480,imgsize-186055,resizemode-1,msid-66135358/rupee-tanks-32-paise-to-hit-fresh-lifetime-low-of-74-39.jpg',
       'amount': amount,
       'createdAt': createdAt.toIso8601String(),
+      'category': category,
       'userEmail': _authenticatedUser.email,
       'userId': _authenticatedUser.id,
-      'isFavorite': false,
     };
     try {
       final http.Response response = await http.post(
@@ -139,14 +167,15 @@ mixin ExpensesModel on ConnectedExpensesModel {
           id: responseData['name'],
           title: title,
           description: description,
-          image: image,
+          //image: image,
           amount: amount,
           createdAt: DateTime.parse(createdAt.toString()),
+          category: category,
           userEmail: _authenticatedUser.email,
-          isFavorite: false,
           userId: _authenticatedUser.id);
       _expenses.add(newExpense);
       totalExpenses(_expenses);
+      todayExpense(_expenses);
       _isLoading = false;
       notifyListeners();
       return true;
@@ -157,20 +186,20 @@ mixin ExpensesModel on ConnectedExpensesModel {
     }
   }
 
-  Future<bool> updateExpense(String title, String description, String image,
-      double amount, DateTime createdAt) {
+  Future<bool> updateExpense(String title, String description, double amount,
+      DateTime createdAt, String category) {
     _isLoading = true;
     notifyListeners();
     final Map<String, dynamic> updateData = {
       'title': title,
       'description': description,
-      'image':
-          'https://img.etimg.com/thumb/width-640,height-480,imgsize-186055,resizemode-1,msid-66135358/rupee-tanks-32-paise-to-hit-fresh-lifetime-low-of-74-39.jpg',
+      // 'image':
+      //     'https://img.etimg.com/thumb/width-640,height-480,imgsize-186055,resizemode-1,msid-66135358/rupee-tanks-32-paise-to-hit-fresh-lifetime-low-of-74-39.jpg',
       'amount': amount,
       'createdAt': createdAt.toIso8601String(),
+      'category': category,
       'userEmail': selectedExpense.userEmail,
       'userId': selectedExpense.userId,
-      'isFavorite': selectedExpense.isFavorite
     };
     return http
         .put(
@@ -182,15 +211,16 @@ mixin ExpensesModel on ConnectedExpensesModel {
           id: selectedExpense.id,
           title: title,
           description: description,
-          image: image,
+          //image: image,
           amount: amount,
           createdAt: DateTime.parse(createdAt.toString()),
-          isFavorite: selectedExpense.isFavorite,
+          category: category,
           userEmail: selectedExpense.userEmail,
           userId: selectedExpense.userId);
       _expenses[selectedExpenseIndex] = updatedExpense;
       _selExpenseId = null;
       totalExpenses(_expenses);
+      todayExpense(_expenses);
       notifyListeners();
       return true;
     }).catchError((error) {
@@ -211,6 +241,28 @@ mixin ExpensesModel on ConnectedExpensesModel {
             'https://flutter-my-expenses.firebaseio.com/expenses/${_authenticatedUser.id}/$deletedExpenseId.json?auth=${_authenticatedUser.token}')
         .then((http.Response response) {
       totalExpenses(_expenses);
+      todayExpense(_expenses);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    }).catchError((error) {
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    });
+  }
+
+  Future<bool> clearAllExpense() {
+    _isLoading = true;
+    _selExpenseId = null;
+    notifyListeners();
+    return http
+        .delete(
+            'https://flutter-my-expenses.firebaseio.com/expenses/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}')
+        .then((http.Response response) {
+      _expenses.clear();
+      totalExpenses(_expenses);
+      todayExpense(_expenses);
       _isLoading = false;
       notifyListeners();
       return true;
@@ -240,9 +292,10 @@ mixin ExpensesModel on ConnectedExpensesModel {
           id: expenseId,
           title: expenseData['title'],
           description: expenseData['description'],
-          image: expenseData['image'],
+          //image: expenseData['image'],
           amount: expenseData['amount'],
           createdAt: DateTime.parse(expenseData['createdAt']),
+          category: expenseData['category'],
           userEmail: expenseData['userEmail'],
           userId: expenseData['userId'],
         );
@@ -250,7 +303,7 @@ mixin ExpensesModel on ConnectedExpensesModel {
       });
       _expenses = fetchedExpenseList.toList();
       totalExpenses(_expenses);
-      print(totalExpense);
+      todayExpense(_expenses);
       _isLoading = false;
       notifyListeners();
       _selExpenseId = null;

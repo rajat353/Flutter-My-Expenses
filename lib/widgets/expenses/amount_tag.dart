@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 class AmountTag extends StatelessWidget {
   final String amount;
-
   AmountTag(this.amount);
 
   @override

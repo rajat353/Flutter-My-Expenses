@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import '../../scoped-models/main.dart';
 
-class LogoutListTile extends StatelessWidget {
+class ClearAllListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScopedModelDescendant(
       builder: (BuildContext context, Widget child, MainModel model) {
         return ListTile(
-          leading: Icon(Icons.exit_to_app),
-          title: Text('Logout'),
+          leading: Icon(Icons.delete_forever),
+          title: Text('Clear All'),
           onTap: () {
-            model.logout();
+            model.clearAllExpense();
+            Navigator.pop(context);
           },
         );
       },

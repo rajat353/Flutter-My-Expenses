@@ -7,6 +7,17 @@ import '../../models/expense.dart';
 import '../../scoped-models/main.dart';
 import '../../pages/expense_edit.dart';
 
+final Map<String, IconData> iconsCat = {
+  'No Category': Icons.error_outline,
+  'Food': Icons.restaurant,
+  'Bills': Icons.format_list_numbered,
+  'Entertainment': Icons.fastfood,
+  'Shopping': Icons.shopping_cart,
+  'Health': Icons.add_box,
+  'Education': Icons.school,
+  'Travel': Icons.transfer_within_a_station
+};
+
 class ExpenseCard extends StatelessWidget {
   final Expense expense;
   final int expenseIndex;
@@ -34,12 +45,23 @@ class ExpenseCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           CircleAvatar(
-                              backgroundColor: Colors.white,
-                              radius: 20,
-                              child: FadeInImage(
-                                image: NetworkImage(expense.image),
-                                placeholder: AssetImage('assets/rupee.jpg'),
-                              )),
+                            backgroundColor: Colors.blueGrey[700],
+                            radius: 25,
+                            child: Icon(iconsCat[expense.category],
+                                color: Colors.white),
+                            //child:
+                            // FadeInImage(
+                            //   image: NetworkImage(expense.image),
+                            //   placeholder: AssetImage('assets/rupee.jpg'),
+                            // )
+                          ),
+                          Text(
+                            expense.category,
+                            style: TextStyle(
+                              fontSize: 10,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                           IconButton(
                               icon: Icon(Icons.edit),
                               color: Theme.of(context).accentColor,
@@ -55,7 +77,7 @@ class ExpenseCard extends StatelessWidget {
                               }),
                         ])),
                 Container(
-                  width: MediaQuery.of(context).size.width / 2,
+                  width: MediaQuery.of(context).size.width / 2.3,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
@@ -77,13 +99,17 @@ class ExpenseCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  width: MediaQuery.of(context).size.width / 5,
+                  width: MediaQuery.of(context).size.width / 4,
                   alignment: Alignment.center,
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         AmountTag(expense.amount.toString()),
+                        SizedBox(
+                          height: 10,
+                        ),
                         IconButton(
+                          alignment: Alignment.bottomCenter,
                           icon: Icon(Icons.delete),
                           color: Colors.red,
                           onPressed: () {
