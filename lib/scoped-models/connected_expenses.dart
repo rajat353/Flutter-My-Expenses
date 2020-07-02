@@ -154,7 +154,7 @@ mixin ExpensesModel on ConnectedExpensesModel {
     };
     try {
       final http.Response response = await http.post(
-          'https://flutter-my-expenses.firebaseio.com/expenses/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}',
+          'https://Your-Project-Id.firebaseio.com/expenses/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}',
           body: json.encode(expenseData));
 
       if (response.statusCode != 200 && response.statusCode != 201) {
@@ -203,7 +203,7 @@ mixin ExpensesModel on ConnectedExpensesModel {
     };
     return http
         .put(
-            'https://flutter-my-expenses.firebaseio.com/expenses/${_authenticatedUser.id}/${selectedExpense.id}.json?auth=${_authenticatedUser.token}',
+            'https://Your-Project-Id.firebaseio.com/expenses/${_authenticatedUser.id}/${selectedExpense.id}.json?auth=${_authenticatedUser.token}',
             body: json.encode(updateData))
         .then((http.Response reponse) {
       _isLoading = false;
@@ -238,7 +238,7 @@ mixin ExpensesModel on ConnectedExpensesModel {
     notifyListeners();
     return http
         .delete(
-            'https://flutter-my-expenses.firebaseio.com/expenses/${_authenticatedUser.id}/$deletedExpenseId.json?auth=${_authenticatedUser.token}')
+            'https://Your-Project-Id.firebaseio.com/expenses/${_authenticatedUser.id}/$deletedExpenseId.json?auth=${_authenticatedUser.token}')
         .then((http.Response response) {
       totalExpenses(_expenses);
       todayExpense(_expenses);
@@ -258,7 +258,7 @@ mixin ExpensesModel on ConnectedExpensesModel {
     notifyListeners();
     return http
         .delete(
-            'https://flutter-my-expenses.firebaseio.com/expenses/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}')
+            'https://Your-Project-Id.firebaseio.com/expenses/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}')
         .then((http.Response response) {
       _expenses.clear();
       totalExpenses(_expenses);
@@ -278,7 +278,7 @@ mixin ExpensesModel on ConnectedExpensesModel {
     notifyListeners();
     return http
         .get(
-            'https://flutter-my-expenses.firebaseio.com/expenses/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}')
+            'https://Your-Project-Id.firebaseio.com/expenses/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}')
         .then<Null>((http.Response response) {
       final List<Expense> fetchedExpenseList = [];
       final Map<String, dynamic> expenseListData = json.decode(response.body);
@@ -344,7 +344,7 @@ mixin UserModel on ConnectedExpensesModel {
     http.Response response;
     if (mode == AuthMode.Login) {
       response = await http.post(
-        'https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=AIzaSyB35fvPQJRySrGLgTICvpAqioGRhFAM3M8',
+        'https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=Your-Web-Api',
         body: json.encode(authData),
         headers: {'Content-Type': 'application/json'},
       );
@@ -352,7 +352,7 @@ mixin UserModel on ConnectedExpensesModel {
       _authenticatedUser = null;
       notifyListeners();
       response = await http.post(
-        'https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=AIzaSyB35fvPQJRySrGLgTICvpAqioGRhFAM3M8',
+        'https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=Your-Web-Api',
         body: json.encode(authData),
         headers: {'Content-Type': 'application/json'},
       );

@@ -86,11 +86,13 @@ class _AuthPageState extends State<AuthPage> {
   Widget _buildPasswordTextField() {
     return TextFormField(
       decoration: InputDecoration(
-          labelText: 'Password', filled: true, fillColor: Colors.white),
+          labelText: 'Password (6-15 characters)',
+          filled: true,
+          fillColor: Colors.white),
       obscureText: true,
       controller: _passwordTextController,
       validator: (String value) {
-        if (value.isEmpty || value.length < 6) {
+        if (value.isEmpty || value.length < 6 || value.length > 15) {
           return 'Password invalid';
         }
       },
@@ -155,8 +157,9 @@ class _AuthPageState extends State<AuthPage> {
             onWillPop: onWillPop,
             child: Scaffold(
               appBar: AppBar(
+                automaticallyImplyLeading: false,
                 centerTitle: true,
-                title: Text(_authMode == AuthMode.Login ? 'LOGIN' : 'SIGNUP'),
+                title: Text(_authMode == AuthMode.Login ? 'Login' : 'Sign Up'),
               ),
               body: Container(
                 decoration: BoxDecoration(
@@ -196,8 +199,8 @@ class _AuthPageState extends State<AuthPage> {
                                                 BorderRadius.circular(10)),
                                         textColor: Colors.white,
                                         child: Text(_authMode == AuthMode.Login
-                                            ? 'LOGIN'
-                                            : 'SIGNUP'),
+                                            ? 'Login'
+                                            : 'Sign Up'),
                                         onPressed: () =>
                                             _submitForm(model.authenticate),
                                       );
@@ -206,12 +209,14 @@ class _AuthPageState extends State<AuthPage> {
                             SizedBox(
                               height: 10.0,
                             ),
-                            RaisedButton(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10)),
-                              textColor: Colors.white,
+                            FlatButton(
+                              textColor: Colors.teal,
                               child: Text(
-                                  'Switch to ${_authMode == AuthMode.Login ? 'Signup' : 'Login'}'),
+                                _authMode == AuthMode.Login
+                                    ? "New Here?\nSwitch to " + 'Signup'
+                                    : "Already a Member?\nSwitch to " 'Login',
+                                textAlign: TextAlign.center,
+                              ),
                               onPressed: () {
                                 setState(() {
                                   _authMode = _authMode == AuthMode.Login

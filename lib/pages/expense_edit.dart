@@ -96,12 +96,13 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
       child: TextFormField(
         focusNode: _amountFocusNode,
         keyboardType: TextInputType.number,
-        decoration: InputDecoration(labelText: 'Expense amount'),
+        decoration: InputDecoration(labelText: 'Expense Amount'),
         initialValue: expense == null ? '' : expense.amount.toString(),
         validator: (String value) {
-          if (value.isEmpty || double.parse(value)<=0 ||
+          if (value.isEmpty ||
+              double.parse(value) <= 0 ||
               !RegExp(r'^(?:[0-9]\d*|0)?(?:\.\d+)?$').hasMatch(value)) {
-            return 'amount is required and should be a number.';
+            return 'Amount is required and should be a number.';
           }
         },
         onSaved: (String value) {
@@ -118,7 +119,7 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
 
   Widget _buildCategoryField(Expense expense) {
     return Container(
-      alignment: Alignment.center,
+        alignment: Alignment.center,
         decoration: ShapeDecoration(
             shape: RoundedRectangleBorder(
           side: BorderSide(
@@ -130,8 +131,6 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
           onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
           focusColor: Colors.blue,
           iconEnabledColor: Colors.teal,
-          autofocus: true,
-          elevation: 50,
           value: _catValue == null
               ? (expense == null
                   ? setCategory('No Category')
@@ -143,7 +142,12 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
             });
           },
           items: _category.map((category) {
-            return DropdownMenuItem(child: Text(category), value: category);
+            return DropdownMenuItem(
+                child: Container(
+                  width: MediaQuery.of(context).size.width / 1.5,
+                  child: Text(category, textAlign: TextAlign.center),
+                ),
+                value: category);
           }).toList(),
         ));
   }
@@ -302,26 +306,32 @@ class _ExpenseEditPageState extends State<ExpenseEditPage> {
       builder: (BuildContext context, Widget child, MainModel model) {
         final Widget pageContent =
             _buildPageContent(context, model.selectedExpense);
-        return model.selectedExpenseIndex == -1
-            ? Scaffold(
-                appBar: AppBar(
-                  title: Text('Add Expense'),
-                ),
-                body: pageContent,
-              )
-            : Scaffold(
-                appBar: AppBar(
-                  leading: IconButton(
-                    icon: Icon(Icons.keyboard_backspace),
-                    onPressed: () {
-                      model.setSelctedExpense();
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  title: Text('Edit Expense'),
-                ),
-                body: pageContent,
-              );
+        return WillPopScope(
+            onWillPop: () {
+              model.setSelctedExpense();
+              Navigator.of(context).pop();
+              return Future.value(false);
+            },
+            child: model.selectedExpenseIndex == -1
+                ? Scaffold(
+                    appBar: AppBar(
+                      title: Text('Add Expense'),
+                    ),
+                    body: pageContent,
+                  )
+                : Scaffold(
+                    appBar: AppBar(
+                      leading: IconButton(
+                        icon: Icon(Icons.keyboard_backspace),
+                        onPressed: () {
+                          model.setSelctedExpense();
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      title: Text('Edit Expense'),
+                    ),
+                    body: pageContent,
+                  ));
       },
     );
   }
